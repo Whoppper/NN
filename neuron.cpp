@@ -15,7 +15,7 @@ void Neuron::updateInputWeights(Layer &prevLayer)
         Neuron *neuron = prevLayer[n];
         double oldDeltaWeight = neuron->mOutputWeights[mIndex]->deltaWeight;
 
-        double newDeltaWeight = eta * neuron->getOutputVal() * mGradient + alpha * oldDeltaWeight;
+        double newDeltaWeight = eta * neuron->getOutputVal() * mGradient + oldDeltaWeight;
 
         neuron->mOutputWeights[mIndex]->deltaWeight = newDeltaWeight;
         neuron->mOutputWeights[mIndex]->weight += newDeltaWeight;
@@ -39,15 +39,15 @@ double Neuron::sumDOW(const Layer &nextLayer) const
 void Neuron::calcHiddenGradients(const Layer &nextLayer)
 {
     double dow = sumDOW(nextLayer);
-    mGradient = dow * Neuron::transferFunctionDerivative(mOutputVal);
-    //mGradient = dow * Neuron::transferFunctionDerivative(mInputVal);
+    //mGradient = dow * Neuron::transferFunctionDerivative(mOutputVal);
+    mGradient = dow * Neuron::transferFunctionDerivative(mInputVal);
 }
 
 void Neuron::calcOutputGradients(double targetVal)
 {
     double delta = targetVal - mOutputVal;
-    mGradient = delta * Neuron::transferFunctionDerivative(mOutputVal);
-    //mGradient = dow * Neuron::transferFunctionDerivative(mInputVal);
+    //mGradient = delta * Neuron::transferFunctionDerivative(mOutputVal);
+    mGradient = dow * Neuron::transferFunctionDerivative(mInputVal);
 }
 
 /*where m_inputVal is a new member variable and is set to sum:
