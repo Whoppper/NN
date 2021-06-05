@@ -27,43 +27,37 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     TrainingData trainData("./trainingData.txt");
+    trainData.parseFile();
 
-    // e.g., { 3, 2, 1 }
-    QVector<int> topology;
-    trainData.getTopology(topology);
-
-    Net myNet(topology);
-
-    QVector<double> inputVals, targetVals, resultVals;
+    Net myNet(trainData.mTopology);
+    myNet.mOutputs = trainData.mOutputs;
+    myNet.mInputs = trainData.mInputs;
+    QVector<double> resultVals;
     int trainingPass = 0;
-
-    while (!trainData.isEof())
+    qDebug() << "total data: " <<myNet.mInputs.size();
+    /*for (int i = 0; i < myNet.mOutputs.size() ; i++)
     {
-        ++trainingPass;
-        qDebug()  << "Pass " << trainingPass;
+         showVectorVals("outputs should have been:", myNet.mOutputs[i]);
+    }*/
+    while (trainingPass < myNet.mInputs.size())
+    {
+        //qDebug()  << "Pass " << trainingPass;
 
-        // Get new input data and feed it forward:
-        if (trainData.getNextInputs(inputVals) != topology[0])
-        {
-            break;
-        }
-        showVectorVals("Inputs:", inputVals);
-        myNet.feedForward(inputVals);
+        showVectorVals("Inputs:", myNet.mInputs[trainingPass]);
+        myNet.feedForward(myNet.mInputs[trainingPass]);
 
         // Collect the net's actual output results:
         myNet.getResults(resultVals);
         showVectorVals("net output: ", resultVals);
 
-        // Train the net what the outputs should have been:
-        trainData.getTargetOutputs(targetVals);
-        showVectorVals("outputs should have been:", targetVals);
-        qDebug() << targetVals.size() << " " << topology.back();
-        assert(targetVals.size() == topology.back());
+        showVectorVals("outputs should have been:", myNet.mOutputs[trainingPass]);
+        //assert(myNet.mOutputs[trainingPass].size() == myNet.mLayers.back().size());
 
-        myNet.backProp(targetVals);
+        myNet.backProp(myNet.mOutputs[trainingPass]);
 
         // Report how well the training is working, average over recent samples:
-        qDebug()  << "Net recent average error: " << myNet.getRecentAverageError() << "\n";
+        //qDebug()  << "Net recent average error: " << myNet.getRecentAverageError() << "\n";
+        ++trainingPass;
     }
 
     qDebug() << "Done";

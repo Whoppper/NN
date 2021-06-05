@@ -24,3 +24,6 @@ HEADERS += \
     net.h \
     neuron.h \
     trainingdata.h
+
+DISTFILES += \
+    trainingData.txt

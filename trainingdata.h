@@ -18,9 +18,13 @@ public:
     bool isEof();
     int getNextInputs(QVector<double> &inputVals);
     int getTargetOutputs(QVector<double> &targetOutputVals);
+    int parseFile();
 
-private:
+public:
     QFile mTrainingDataFile;
     QTextStream mFileStream;
+    QVector<int> mTopology;
+    QVector<QVector<double>> mInputs;
+    QVector<QVector<double>> mOutputs;
 };
 #endif // TRAININGDATA_H

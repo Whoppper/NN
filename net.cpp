@@ -99,12 +99,12 @@ Net::Net(const QVector<int> &topology)
 
         // We have a new layer, now fill it with neurons, and
         // add a bias neuron in each layer.
-        for (int neuronNum = 0; neuronNum <= topology[layerNum]; ++neuronNum)
+        for (int neuronNum = 0; neuronNum < topology[layerNum]; ++neuronNum)
         {
             mLayers.back().push_back(new Neuron(numOutputs, neuronNum));
             qDebug() << "Made a Neuron!" ;
         }
-
+        mLayers.back().push_back(new Neuron(numOutputs, topology[layerNum], true ));
         // Force the bias node's output to 1.0 (it was the last neuron pushed in this layer):
         mLayers.back().back()->setOutputVal(1.0);
     }

@@ -5,10 +5,7 @@
 #include <QDebug>
 TrainingData::TrainingData(const QString& filename) : mTrainingDataFile(filename), mFileStream(&mTrainingDataFile)
 {
-    if(mTrainingDataFile.open(QIODevice::ReadWrite | QIODevice::Text))
-    {
-        QTextStream stream(&mTrainingDataFile);
-    }
+
 }
 
 TrainingData::~TrainingData()
@@ -37,36 +34,45 @@ void TrainingData::getTopology(QVector<int> &topology)
     return;
 }
 
-
-
-int TrainingData::getNextInputs(QVector<double> &inputVals)
+int TrainingData::parseFile()
 {
-    inputVals.clear();
-
-    QString topo = mFileStream.readLine();
-    //qDebug() << "input " << topo;
-    QStringList topoLst = topo.split(' ');
-    for (const QString &t : topoLst)
+    if(mTrainingDataFile.open(QIODevice::ReadWrite | QIODevice::Text))
     {
-        inputVals.push_back(t.toInt());
+        while (!mTrainingDataFile.atEnd())
+        {
+            QByteArray bline = mTrainingDataFile.readLine();
+            QString line(bline);
+            QStringList topoLst = line.split(' ');
+            for (const QString &t : topoLst)
+            {
+                mTopology.push_back(t.toInt());
+            }
+            while (!mTrainingDataFile.atEnd())
+            {
+                QVector<double> inputs;
+                bline = mTrainingDataFile.readLine();
+                QString inputLine(bline);
+                QStringList inputLst = inputLine.split(' ');
+                for (const QString &t : inputLst)
+                {
+                    inputs.push_back(t.toDouble());
+                }
+                mInputs.push_back(inputs);
+                if (mTrainingDataFile.atEnd())
+                {
+                    qDebug() << "wrong number of lines";
+                    Q_ASSERT(0);
+                }
+                QVector<double> outputs;
+                bline = mTrainingDataFile.readLine();
+                QString outputLine(bline);
+                QStringList outputLst = outputLine.split(' ');
+                for (const QString &t : outputLst)
+                {
+                    outputs.push_back(t.toDouble());
+                }
+                mOutputs.push_back(outputs);
+            }
+        }
     }
-
-    return inputVals.size();
-}
-
-int TrainingData::getTargetOutputs(QVector<double> &targetOutputVals)
-{
-    targetOutputVals.clear();
-
-    QString line;
-
-    QString topo = mFileStream.readLine();
-    //qDebug() << "output " << topo;
-    QStringList topoLst = topo.split(' ');
-    for (const QString &t : topoLst)
-    {
-        targetOutputVals.push_back(t.toDouble());
-    }
-
-    return targetOutputVals.size();
 }

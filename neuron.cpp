@@ -1,8 +1,8 @@
 #include "neuron.h"
 #include "connection.h"
 
-double Neuron::eta = 0.15;    // overall net learning rate, [0.0..1.0]
-double Neuron::alpha = 0.1;   // momentum, multiplier of last deltaWeight, [0.0..1.0]
+double Neuron::eta = 0.4;    // overall net learning rate, [0.0..1.0]
+double Neuron::alpha = 0.4;   // momentum, multiplier of last deltaWeight, [0.0..1.0]
 
 
 void Neuron::updateInputWeights(Layer &prevLayer)
@@ -13,9 +13,18 @@ void Neuron::updateInputWeights(Layer &prevLayer)
     for (int n = 0; n < prevLayer.size(); ++n)
     {
         Neuron *neuron = prevLayer[n];
-        double oldDeltaWeight = neuron->mOutputWeights[mIndex]->deltaWeight;
 
-        double newDeltaWeight = eta * neuron->getOutputVal() * mGradient + oldDeltaWeight;
+        double newDeltaWeight;
+
+         newDeltaWeight = - eta * neuron->getOutputVal() * mGradient + alpha * neuron->mOutputWeights[mIndex]->deltaWeight ;
+        /*if (n == prevLayer.size() - 1)
+        {
+            newDeltaWeight = - eta  * mGradient;
+        }
+        else
+        {
+            newDeltaWeight = - eta * neuron->getOutputVal() * mGradient;
+        }*/
 
         neuron->mOutputWeights[mIndex]->deltaWeight = newDeltaWeight;
         neuron->mOutputWeights[mIndex]->weight += newDeltaWeight;
@@ -45,9 +54,9 @@ void Neuron::calcHiddenGradients(const Layer &nextLayer)
 
 void Neuron::calcOutputGradients(double targetVal)
 {
-    double delta = targetVal - mOutputVal;
+    double delta =  - (targetVal - mOutputVal) ;
     //mGradient = delta * Neuron::transferFunctionDerivative(mOutputVal);
-    mGradient = dow * Neuron::transferFunctionDerivative(mInputVal);
+    mGradient = delta * Neuron::transferFunctionDerivative(mInputVal);
 }
 
 /*where m_inputVal is a new member variable and is set to sum:
@@ -85,18 +94,25 @@ void Neuron::feedForward(const Layer &prevLayer)
     {
         sum += prevLayer[n]->getOutputVal() * prevLayer[n]->mOutputWeights[mIndex]->weight;
     }
-
+    mInputVal = sum;
     mOutputVal = Neuron::transferFunction(sum);
 }
 
-Neuron::Neuron(unsigned numOutputs, unsigned myIndex)
+Neuron::Neuron(unsigned numOutputs, unsigned myIndex, bool isBiais)
 {
     for (unsigned c = 0; c < numOutputs; ++c)
     {
         mOutputWeights.push_back(new Connection());
         mOutputWeights.back()->weight = randomWeight();
-    }
+        /*if (!isBiais)
+        {
+            mOutputWeights.back()->weight = randomWeight();
+        }
+        else
+            mOutputWeights.back()->weight = 1;*/
 
+    }
+    mIsBiais = isBiais;
     mIndex = myIndex;
 }
 
