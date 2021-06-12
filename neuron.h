@@ -5,39 +5,65 @@
 #include <cassert>
 #include <cmath>
 #include <QVector>
+#include <QHash>
+#include <random>
+
+enum class ActivationFunction
+{
+    TanH
+};
 
 class Connection;
 
 class Neuron;
 typedef  QVector<Neuron *> Layer;
+
 class Neuron
 {
 public:
-    Neuron(unsigned numOutputs, unsigned myIndex, bool isBiais = false);
+    Neuron(const QHash<int, Connection *> &connections);
+    Neuron();
     ~Neuron();
-    void setOutputVal(double val) { mOutputVal = val; }
-    double getOutputVal(void) const { return mOutputVal; }
-
 
     void feedForward(const Layer &prevLayer);
     void calcOutputGradients(double targetVal);
     void calcHiddenGradients(const Layer &nextLayer);
     void updateInputWeights(Layer &prevLayer);
 
-public:
-    static double eta;   // [0.0..1.0] overall net training rate
-    static double alpha; // [0.0..n] multiplier of last weight change (momentum)
+    double transferFunction();
+    double transferFunctionDerivative();
 
-    static double transferFunction(double x);
-    static double transferFunctionDerivative(double x);
-    static double randomWeight(void) { return ((1 + rand() % 10) / 10.1) ; }
     double sumDOW(const Layer &nextLayer) const;
+
+    double outputVal() const;
+    void setOutputVal(double newOutputVal);
+
+    double inputVal() const;
+    void setInputVal(double newInputVal);
+
+    double gradient() const;
+    void setGradient(double newGradient);
+
+    int id() const;
+    void setId(int newId);
+
+    void setConnections(const QHash<int, Connection *> &connections);
+
+private:
+
+    void setRandomWeight(void);
+
+    static double sEta;   // [0.0..1.0] overall net training rate
+    static double sAlpha; // [0.0..n] multiplier of last weight change (momentum)
+    static int sNeuronId;
+
+    int mId;
     double mOutputVal;
     double mInputVal;
-    QVector<Connection *> mOutputWeights;
-    unsigned mIndex;
+    QHash<int, Connection *> mConnections;
     double mGradient;
-    bool mIsBiais;
+    ActivationFunction mFunction;
+
 };
 
 

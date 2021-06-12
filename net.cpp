@@ -1,7 +1,59 @@
 #include "net.h"
 #include <QVector>
 #include <QDebug>
+#include <QFile>
+#include <QFileInfo>
+
+#include "connection.h"
+
+namespace
+{
+    void showVectorVals(QString label, QVector<double> &v)
+    {
+        QString str;
+        for (int i = 0; i < v.size(); ++i)
+        {
+            str +=  QString::number(v[i]) + " ";
+        }
+
+        qDebug() << label << str;
+    }
+}
+
 double Net::mRecentAverageSmoothingFactor = 100.0; // Number of training samples to average over
+
+Net::Net() : mTrainingIndex(0)
+{
+}
+
+Net::~Net()
+{
+    for (Layer &layer :  mLayers)
+    {
+        for (Neuron *neuron :  layer)
+        {
+            delete neuron;
+        }
+    }
+}
+
+void Net::reset()
+{
+    for (Layer &layer :  mLayers)
+    {
+        for (Neuron *neuron :  layer)
+        {
+            delete neuron;
+        }
+    }
+    mTrainingIndex = 0;
+    mLayers.clear();
+    mError = 0.0;
+    mRecentAverageError = 0.0;
+    mInputs.clear();
+    mOutputs.clear();
+}
+
 
 
 void Net::getResults(QVector<double> &resultVals)
@@ -10,37 +62,27 @@ void Net::getResults(QVector<double> &resultVals)
 
     for (int n = 0; n < mLayers.back().size() - 1; ++n)
     {
-        resultVals.push_back(mLayers.back()[n]->getOutputVal());
+        resultVals.push_back(mLayers.back()[n]->outputVal());
     }
 }
 
 void Net::backProp(const QVector<double> &targetVals)
 {
-    // Calculate overall net error (RMS of output neuron errors)
-
     Layer &outputLayer = mLayers.back();
     mError = 0.0;
-
     for (int n = 0; n < outputLayer.size() - 1; ++n)
     {
-        double delta = targetVals[n] - outputLayer[n]->getOutputVal();
+        double delta = targetVals[n] - outputLayer[n]->outputVal();
         mError += delta * delta;
     }
-    mError /= outputLayer.size() - 1; // get average error squared
+    mError /= outputLayer.size() - 1;
     mError = sqrt(mError); // RMS
-
-    // Implement a recent average measurement
-
     mRecentAverageError = (mRecentAverageError * mRecentAverageSmoothingFactor + mError)/ (mRecentAverageSmoothingFactor + 1.0);
-
-    // Calculate output layer gradients
 
     for (int n = 0; n < outputLayer.size() - 1; ++n)
     {
         outputLayer[n]->calcOutputGradients(targetVals[n]);
     }
-
-    // Calculate hidden layer gradients
 
     for (int layerNum = mLayers.size() - 2; layerNum > 0; --layerNum)
     {
@@ -52,9 +94,6 @@ void Net::backProp(const QVector<double> &targetVals)
             hiddenLayer[n]->calcHiddenGradients(nextLayer);
         }
     }
-
-    // For all layers from outputs to first hidden layer,
-    // update connection weights
 
     for (int layerNum = mLayers.size() - 1; layerNum > 0; --layerNum)
     {
@@ -72,13 +111,11 @@ void Net::feedForward(const QVector<double> &inputVals)
 {
     assert(inputVals.size() == mLayers[0].size() - 1);
 
-    // Assign (latch) the input values into the input neurons
     for (int i = 0; i < inputVals.size(); ++i)
     {
         mLayers[0][i]->setOutputVal(inputVals[i]);
     }
 
-    // forward propagate
     for (int layerNum = 1; layerNum < mLayers.size(); ++layerNum)
     {
         Layer &prevLayer = mLayers[layerNum - 1];
@@ -89,34 +126,141 @@ void Net::feedForward(const QVector<double> &inputVals)
     }
 }
 
-Net::Net(const QVector<int> &topology)
+
+void Net::createTopology(const QVector<int> &topology)
 {
     int numLayers = topology.size();
     for (int layerNum = 0; layerNum < numLayers; ++layerNum)
     {
         mLayers.push_back(Layer());
-        int numOutputs = layerNum == topology.size() - 1 ? 0 : topology[layerNum + 1];
-
-        // We have a new layer, now fill it with neurons, and
-        // add a bias neuron in each layer.
         for (int neuronNum = 0; neuronNum < topology[layerNum]; ++neuronNum)
         {
-            mLayers.back().push_back(new Neuron(numOutputs, neuronNum));
-            qDebug() << "Made a Neuron!" ;
+            mLayers.back().push_back(new Neuron());
         }
-        mLayers.back().push_back(new Neuron(numOutputs, topology[layerNum], true ));
-        // Force the bias node's output to 1.0 (it was the last neuron pushed in this layer):
+        mLayers.back().push_back(new Neuron());
         mLayers.back().back()->setOutputVal(1.0);
     }
 }
 
-Net::~Net()
+void Net::parseTrainingFile(const QString &filename)
 {
-    for (Layer &layer :  mLayers)
+    QFile mTrainingDataFile(filename);
+    if(QFileInfo::exists(filename))
     {
-        for (Neuron *neuron :  layer)
+        qDebug () <<  QString("file: [%1] does not exist").arg(filename);
+        return ;
+    }
+    if(!mTrainingDataFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug () << QString("Can not open the file: ") + filename;
+        return ;
+    }
+    while (!mTrainingDataFile.atEnd())
+    {
+        QByteArray bline = mTrainingDataFile.readLine();
+        while (!mTrainingDataFile.atEnd())
         {
-            delete neuron;
+            QVector<double> inputs;
+            bline = mTrainingDataFile.readLine();
+            QString inputLine(bline);
+            QStringList inputLst = inputLine.split(' ');
+            for (const QString &t : inputLst)
+            {
+                inputs.push_back(t.toDouble());
+            }
+            mInputs.push_back(inputs);
+            if (mTrainingDataFile.atEnd())
+            {
+                qDebug() << "Wrong number of lines";
+                Q_ASSERT(0);
+            }
+            QVector<double> outputs;
+            bline = mTrainingDataFile.readLine();
+            QString outputLine(bline);
+            QStringList outputLst = outputLine.split(' ');
+            for (const QString &t : outputLst)
+            {
+                outputs.push_back(t.toDouble());
+            }
+            mOutputs.push_back(outputs);
         }
     }
 }
+void Net::createConnections(const QString &filename)
+{
+    bool isValid = true;
+    QFile mTrainingDataFile(filename);
+    if(QFileInfo::exists(filename))
+    {
+        //qDebug () <<  QString("file: [%1] does not exist").arg(filename);
+        isValid = false;
+    }
+    if(!mTrainingDataFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        //qDebug () << QString("Can not open the file: ") + filename;
+        isValid = false;
+    }
+    if (isValid)
+    {
+        //TODO
+        Q_ASSERT(0);
+    }
+    else
+    {
+        for (int l = 0; l < mLayers.size() - 2; l++)
+        {
+            Layer layer = mLayers[l];
+            Layer nextLayer = mLayers[l + 1];
+            for (int n = 0; n < layer.size() - 1; n++)
+            {
+                Neuron *neuron = layer[n];
+                QHash<int, Connection *> connections;
+                for (int nn = 0; nn < nextLayer.size(); nn++)
+                {
+                    Neuron *nextNeuron = nextLayer[nn];
+                    connections[nextNeuron->id()] = new Connection();
+                }
+                neuron->setConnections(connections);
+            }
+        }
+    }
+}
+
+bool Net::netIsValid()
+{
+    //TODO (connections faites (au moins un chemin jusqua la sortie), input size = output size, layers size > 1, layer.back.size = outputs.size, ...)
+    return true;
+}
+
+void Net::startTraining()
+{
+    if (!netIsValid())
+    {
+        qDebug() << "Neural net is invalid";
+        reset();
+        return ;
+    }
+    while (mTrainingIndex < mInputs.size())
+    {
+        qDebug()  << "Index " << mTrainingIndex;
+        QVector<double> resultVals;
+
+        showVectorVals("Inputs:", mInputs[mTrainingIndex]);
+        feedForward(mInputs[mTrainingIndex]);
+
+        getResults(resultVals);
+        showVectorVals("Net output: ", resultVals);
+
+        showVectorVals("outputs should have been:", mOutputs[mTrainingIndex]);
+        assert(mOutputs[mTrainingIndex].size() == mLayers.back().size());
+
+        backProp(mOutputs[mTrainingIndex]);
+
+        qDebug()  << "Net recent average error: " << getRecentAverageError() << "\n";
+        ++mTrainingIndex;
+    }
+
+    qDebug() << "Done";
+}
+
+

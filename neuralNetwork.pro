@@ -1,4 +1,4 @@
-QT -= gui
+QT += widgets core gui
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -10,9 +10,9 @@ CONFIG -= app_bundle
 SOURCES += \
         connection.cpp \
         main.cpp \
+        mainwindow.cpp \
         net.cpp \
-        neuron.cpp \
-        trainingdata.cpp
+        neuron.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -21,9 +21,15 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     connection.h \
+    mainwindow.h \
     net.h \
-    neuron.h \
-    trainingdata.h
+    neuron.h
+
+FORMS += \
+    mainwindow.ui
 
 DISTFILES += \
-    trainingData.txt
+    links.txt \
+    trainingDataXOR.txt
+
+

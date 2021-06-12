@@ -1,33 +1,68 @@
 #include "neuron.h"
 #include "connection.h"
 
-double Neuron::eta = 0.4;    // overall net learning rate, [0.0..1.0]
-double Neuron::alpha = 0.4;   // momentum, multiplier of last deltaWeight, [0.0..1.0]
+#include <QList>
 
+double Neuron::sEta = 0.4;    // overall net learning rate, [0.0..1.0]
+double Neuron::sAlpha = 0.4;   // momentum, multiplier of last deltaWeight, [0.0..1.0]
+int Neuron::sNeuronId = 0;
+
+std::random_device rd{};
+std::mt19937 gen(rd());
+
+Neuron::Neuron()
+{
+    mId = sNeuronId++;
+}
+
+Neuron::Neuron(const QHash<int, Connection *> &connections)
+{
+    mConnections = connections;
+    setRandomWeight();
+    mId = sNeuronId++;
+}
+
+void Neuron::setConnections(const QHash<int, Connection *> &connections)
+{
+    mConnections = connections;
+    setRandomWeight();
+}
+
+Neuron::~Neuron()
+{
+    QList<Connection *> connections = mConnections.values();
+    for (int i = 0; i < connections.size(); ++i )
+    {
+        delete connections[i];
+    }
+    mConnections.clear();
+}
 
 void Neuron::updateInputWeights(Layer &prevLayer)
 {
-    // The weights to be updated are in the Connection container
-    // in the neurons in the preceding layer
-
     for (int n = 0; n < prevLayer.size(); ++n)
     {
         Neuron *neuron = prevLayer[n];
-
-        double newDeltaWeight;
-
-         newDeltaWeight = - eta * neuron->getOutputVal() * mGradient + alpha * neuron->mOutputWeights[mIndex]->deltaWeight ;
-        /*if (n == prevLayer.size() - 1)
+        if (neuron->mConnections.contains(mId))
         {
-            newDeltaWeight = - eta  * mGradient;
+            double newDeltaWeight;
+            newDeltaWeight = - sEta * neuron->outputVal() * mGradient + sAlpha * neuron->mConnections[mId]->momentum() ;
+            neuron->mConnections[mId]->setMomentum(newDeltaWeight);
+            neuron->mConnections[mId]->setWeight(newDeltaWeight + neuron->mConnections[mId]->weight());
         }
-        else
-        {
-            newDeltaWeight = - eta * neuron->getOutputVal() * mGradient;
-        }*/
+    }
+}
 
-        neuron->mOutputWeights[mIndex]->deltaWeight = newDeltaWeight;
-        neuron->mOutputWeights[mIndex]->weight += newDeltaWeight;
+void Neuron::setRandomWeight(void)
+{
+    if (mConnections.size() == 0)
+        return ;
+    double interval = 1.0 / sqrt(mConnections.size());
+    std::uniform_real_distribution<> dist(-interval, interval);
+    for (int i = 0; i < mConnections.size(); i++)
+    {
+        mConnections[i]->setWeight(dist(gen));
+        mConnections[i]->setMomentum(0);
     }
 }
 
@@ -35,93 +70,99 @@ double Neuron::sumDOW(const Layer &nextLayer) const
 {
     double sum = 0.0;
 
-    // Sum our contributions of the errors at the nodes we feed.
-
     for (int n = 0; n < nextLayer.size() - 1; ++n)
     {
-        sum += mOutputWeights[n]->weight * nextLayer[n]->mGradient;
+        if (mConnections.contains(nextLayer[n]->id()))
+        {
+            sum += mConnections[n]->weight() * nextLayer[n]->mGradient;
+        }
     }
-
     return sum;
 }
 
 void Neuron::calcHiddenGradients(const Layer &nextLayer)
 {
     double dow = sumDOW(nextLayer);
-    //mGradient = dow * Neuron::transferFunctionDerivative(mOutputVal);
-    mGradient = dow * Neuron::transferFunctionDerivative(mInputVal);
+    mGradient = dow * Neuron::transferFunctionDerivative();
 }
 
 void Neuron::calcOutputGradients(double targetVal)
 {
-    double delta =  - (targetVal - mOutputVal) ;
-    //mGradient = delta * Neuron::transferFunctionDerivative(mOutputVal);
-    mGradient = delta * Neuron::transferFunctionDerivative(mInputVal);
+    double delta =  - (targetVal - mOutputVal) ; // dError/dOutput (( 1/2(targetVal - mOutputVal) ^2)')
+    mGradient = delta * Neuron::transferFunctionDerivative();
 }
 
-/*where m_inputVal is a new member variable and is set to sum:
-...
-m_inputVal = sum;
-m_outputVal = Neuron::transferFunction(sum);
-}*/
-
-double Neuron::transferFunction(double x)
+double Neuron::transferFunction()
 {
-    // tanh - output range [-1.0..1.0]
-
-
-    double res = tanh(x);
+    double res = 0;
+    if (mFunction == ActivationFunction::TanH)
+    {
+        res = tanh(mInputVal);
+    }
     return res;
 }
 
-double Neuron::transferFunctionDerivative(double x)
+double Neuron::transferFunctionDerivative()
 {
-    // tanh derivative
-
-    double res = 1.0 - tanh(x) * tanh(x);
-    //return 1.0 - x * x;
+    double res = 0;
+    if (mFunction == ActivationFunction::TanH)
+    {
+        res = 1.0 - tanh(mInputVal) * tanh(mInputVal);
+    }
     return res;
 }
 
 void Neuron::feedForward(const Layer &prevLayer)
 {
     double sum = 0.0;
-
-    // Sum the previous layer's outputs (which are our inputs)
-    // Include the bias node from the previous layer.
-
     for (int n = 0; n < prevLayer.size(); ++n)
     {
-        sum += prevLayer[n]->getOutputVal() * prevLayer[n]->mOutputWeights[mIndex]->weight;
+        if (prevLayer[n]->mConnections.contains(mId))
+        {
+            sum += prevLayer[n]->outputVal() * prevLayer[n]->mConnections[mId]->weight();
+        }
     }
     mInputVal = sum;
-    mOutputVal = Neuron::transferFunction(sum);
+    mOutputVal = Neuron::transferFunction();
 }
 
-Neuron::Neuron(unsigned numOutputs, unsigned myIndex, bool isBiais)
+double Neuron::outputVal() const
 {
-    for (unsigned c = 0; c < numOutputs; ++c)
-    {
-        mOutputWeights.push_back(new Connection());
-        mOutputWeights.back()->weight = randomWeight();
-        /*if (!isBiais)
-        {
-            mOutputWeights.back()->weight = randomWeight();
-        }
-        else
-            mOutputWeights.back()->weight = 1;*/
-
-    }
-    mIsBiais = isBiais;
-    mIndex = myIndex;
+    return mOutputVal;
 }
 
-Neuron::~Neuron()
+void Neuron::setOutputVal(double newOutputVal)
 {
-    for (int i = 0; i < mOutputWeights.size(); i++)
-    {
-        Connection *connection = mOutputWeights[i];
-        delete connection;
-    }
-    mOutputWeights.clear();
+    mOutputVal = newOutputVal;
 }
+
+double Neuron::inputVal() const
+{
+    return mInputVal;
+}
+
+void Neuron::setInputVal(double newInputVal)
+{
+    mInputVal = newInputVal;
+}
+
+double Neuron::gradient() const
+{
+    return mGradient;
+}
+
+void Neuron::setGradient(double newGradient)
+{
+    mGradient = newGradient;
+}
+
+int Neuron::id() const
+{
+    return mId;
+}
+
+void Neuron::setId(int newId)
+{
+    mId = newId;
+}
+
