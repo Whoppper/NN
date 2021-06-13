@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 
-namespace Ui { class MainWindow; }
+class Net;
 
 class MainWindow : public QMainWindow
 {
@@ -13,7 +13,16 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void createMenus();
+
+private slots:
+
+    void newNet();
+    void startTraining();
+    void editNet();
+
 private:
-    Ui::MainWindow *ui;
+    Net *mNet;
+
 };
 #endif // MAINWINDOW_H

@@ -16,12 +16,18 @@ public:
     void backProp(const QVector<double> &targetVals);
     void getResults(QVector<double> &resultVals);
     double getRecentAverageError(void) const { return mRecentAverageError; }
+    void randomizeConnectionsWeight(void);
+    void setBiaisOutputVal(void);
 
 public slots:
     void reset();
-    void createTopology(const QVector<int> &topology);
-    void parseTrainingFile(const QString &filename);
-    void createConnections(const QString &filename);
+
+    bool parseTrainingFile(const QString &filename);
+    bool parseNetFile(const QString &filename);
+
+    //void createTopology(const QVector<int> &topology);
+    //void createConnections(const QString &filename);
+
     void startTraining();
 
 private:

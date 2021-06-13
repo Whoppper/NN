@@ -22,7 +22,7 @@ class Neuron
 {
 public:
     Neuron(const QHash<int, Connection *> &connections);
-    Neuron();
+    Neuron(int id);
     ~Neuron();
 
     void feedForward(const Layer &prevLayer);
@@ -48,14 +48,17 @@ public:
     void setId(int newId);
 
     void setConnections(const QHash<int, Connection *> &connections);
-
-private:
+    QHash<int, Connection *> &getConnections();
 
     void setRandomWeight(void);
 
+private:
+
+
+
     static double sEta;   // [0.0..1.0] overall net training rate
     static double sAlpha; // [0.0..n] multiplier of last weight change (momentum)
-    static int sNeuronId;
+   // static int sNeuronId;
 
     int mId;
     double mOutputVal;

@@ -1,4 +1,4 @@
-QT += widgets core gui
+QT += widgets core gui xml
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -12,7 +12,9 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
         net.cpp \
-        neuron.cpp
+        neuron.cpp \
+        newnetdialog.cpp \
+        trainingdialog.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -23,13 +25,14 @@ HEADERS += \
     connection.h \
     mainwindow.h \
     net.h \
-    neuron.h
+    neuron.h \
+    newnetdialog.h \
+    trainingdialog.h
 
-FORMS += \
-    mainwindow.ui
+FORMS +=
 
 DISTFILES += \
     links.txt \
-    trainingDataXOR.txt
+    trainingFiles/trainingDataXOR.txt
 
 

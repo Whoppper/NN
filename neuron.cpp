@@ -5,27 +5,33 @@
 
 double Neuron::sEta = 0.4;    // overall net learning rate, [0.0..1.0]
 double Neuron::sAlpha = 0.4;   // momentum, multiplier of last deltaWeight, [0.0..1.0]
-int Neuron::sNeuronId = 0;
+//int Neuron::sNeuronId = 0;
 
 std::random_device rd{};
 std::mt19937 gen(rd());
 
-Neuron::Neuron()
+Neuron::Neuron(int id)
 {
-    mId = sNeuronId++;
+    //mId = sNeuronId++;
+    mId = id;
 }
 
 Neuron::Neuron(const QHash<int, Connection *> &connections)
 {
     mConnections = connections;
     setRandomWeight();
-    mId = sNeuronId++;
+    //mId = sNeuronId++;
 }
 
 void Neuron::setConnections(const QHash<int, Connection *> &connections)
 {
     mConnections = connections;
     setRandomWeight();
+}
+
+QHash<int, Connection *> &Neuron::getConnections()
+{
+    return mConnections;
 }
 
 Neuron::~Neuron()
@@ -59,10 +65,11 @@ void Neuron::setRandomWeight(void)
         return ;
     double interval = 1.0 / sqrt(mConnections.size());
     std::uniform_real_distribution<> dist(-interval, interval);
-    for (int i = 0; i < mConnections.size(); i++)
+    QList<Connection *> connections = mConnections.values();
+    for (int i = 0; i < connections.size(); i++)
     {
-        mConnections[i]->setWeight(dist(gen));
-        mConnections[i]->setMomentum(0);
+        connections[i]->setWeight(dist(gen));
+        connections[i]->setMomentum(0);
     }
 }
 
@@ -74,7 +81,7 @@ double Neuron::sumDOW(const Layer &nextLayer) const
     {
         if (mConnections.contains(nextLayer[n]->id()))
         {
-            sum += mConnections[n]->weight() * nextLayer[n]->mGradient;
+            sum += mConnections[nextLayer[n]->id()]->weight() * nextLayer[n]->mGradient;
         }
     }
     return sum;
@@ -99,6 +106,10 @@ double Neuron::transferFunction()
     {
         res = tanh(mInputVal);
     }
+    else
+    {
+        res = tanh(mInputVal);
+    }
     return res;
 }
 
@@ -106,6 +117,10 @@ double Neuron::transferFunctionDerivative()
 {
     double res = 0;
     if (mFunction == ActivationFunction::TanH)
+    {
+        res = 1.0 - tanh(mInputVal) * tanh(mInputVal);
+    }
+    else
     {
         res = 1.0 - tanh(mInputVal) * tanh(mInputVal);
     }
