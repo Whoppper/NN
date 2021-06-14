@@ -4,7 +4,7 @@
 #include <QList>
 
 double Neuron::sEta = 0.4;    // overall net learning rate, [0.0..1.0]
-double Neuron::sAlpha = 0.4;   // momentum, multiplier of last deltaWeight, [0.0..1.0]
+double Neuron::sAlpha = 0.2;   // momentum, multiplier of last deltaWeight, [0.0..1.0]
 //int Neuron::sNeuronId = 0;
 
 std::random_device rd{};
@@ -77,7 +77,7 @@ double Neuron::sumDOW(const Layer &nextLayer) const
 {
     double sum = 0.0;
 
-    for (int n = 0; n < nextLayer.size() - 1; ++n)
+    for (int n = 0; n < nextLayer.size(); ++n)
     {
         if (mConnections.contains(nextLayer[n]->id()))
         {

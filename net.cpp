@@ -74,12 +74,12 @@ void Net::backProp(const QVector<double> &targetVals)
 {
     Layer &outputLayer = mLayers.back();
     mError = 0.0;
-    for (int n = 0; n < outputLayer.size() - 1; ++n)
+    for (int n = 0; n < outputLayer.size(); ++n)
     {
         double delta = targetVals[n] - outputLayer[n]->outputVal();
         mError += delta * delta;
     }
-    mError /= outputLayer.size() - 1;
+    mError /= outputLayer.size();
     mError = sqrt(mError);
     mRecentAverageError = (mRecentAverageError * mRecentAverageSmoothingFactor + mError)/ (mRecentAverageSmoothingFactor + 1.0);
 
@@ -123,8 +123,12 @@ void Net::feedForward(const QVector<double> &inputVals)
     for (int layerNum = 1; layerNum < mLayers.size(); ++layerNum)
     {
         Layer &prevLayer = mLayers[layerNum - 1];
-        for (int n = 0; n < mLayers[layerNum].size() - 1; ++n)
+        for (int n = 0; n < mLayers[layerNum].size(); ++n)
         {
+            if (layerNum != mLayers.size() -1 && n == mLayers[layerNum].size() - 1) //ne pas faire le feedforward sur les biais
+            {
+                continue;
+            }
             mLayers[layerNum][n]->feedForward(prevLayer);
         }
     }
