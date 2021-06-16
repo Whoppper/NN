@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 unix {
     INCLUDEPATH += /usr/lib/gcc/x86_64-linux-gnu/9/include
 }
 
 QT -= gui
+=======
+QT += widgets core gui xml
+>>>>>>> upstream/main
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -14,9 +18,11 @@ CONFIG -= app_bundle
 SOURCES += \
         connection.cpp \
         main.cpp \
+        mainwindow.cpp \
         net.cpp \
         neuron.cpp \
-        trainingdata.cpp
+        newnetdialog.cpp \
+        trainingdialog.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -25,6 +31,16 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     connection.h \
+    mainwindow.h \
     net.h \
     neuron.h \
-    trainingdata.h
+    newnetdialog.h \
+    trainingdialog.h
+
+FORMS +=
+
+DISTFILES += \
+    links.txt \
+    trainingFiles/trainingDataXOR.txt
+
+
