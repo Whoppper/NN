@@ -1,4 +1,12 @@
+<<<<<<< HEAD
+unix {
+    INCLUDEPATH += /usr/lib/gcc/x86_64-linux-gnu/9/include
+}
+
+QT -= gui
+=======
 QT += widgets core gui xml
+>>>>>>> upstream/main
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
