@@ -104,7 +104,7 @@ void Net::backProp(const QVector<double> &targetVals)
         Layer &layer = mLayers[layerNum];
         Layer &prevLayer = mLayers[layerNum - 1];
 
-        for (int n = 0; n < layer.size() - 1; ++n)
+        for (int n = 0; n < layer.size(); ++n)
         {
             layer[n]->updateInputWeights(prevLayer);
         }
@@ -298,7 +298,7 @@ void Net::startTraining()
 
 void Net::randomizeConnectionsWeight(void)
 {
-    for (int l = 0 ; l < mLayers.size() - 2; l++)
+    for (int l = 0 ; l < mLayers.size() - 1; l++)
     {
         for (int n = 0 ; n < mLayers[l].size(); n++)
         {
@@ -309,7 +309,7 @@ void Net::randomizeConnectionsWeight(void)
 
 void Net::setBiaisOutputVal(void)
 {
-    for (int l = 0 ; l < mLayers.size() - 2; l++)
+    for (int l = 0 ; l < mLayers.size() - 1; l++)
     {
         mLayers[l].back()->setOutputVal(1);
     }
@@ -333,22 +333,24 @@ void Net::create(const QVector<int> &topology)
         }
         mLayers.back().push_back(new Neuron(neuronId++));
         mLayers.back().back()->setOutputVal(1.0);
-        createConnections();
     }
+    createConnections();
 }
 
 void Net::createConnections()
 {
-    for (int l = 0; l < mLayers.size() - 2; l++)
+    for (int l = 0; l < mLayers.size() - 1; l++)
     {
         Layer layer = mLayers[l];
         Layer nextLayer = mLayers[l + 1];
-        for (int n = 0; n < layer.size() - 1; n++)
+        for (int n = 0; n < layer.size(); n++)
         {
             Neuron *neuron = layer[n];
-            QHash<int, Connection *> connections;
+            QMap<int, Connection *> connections;
             for (int nn = 0; nn < nextLayer.size(); nn++)
             {
+                if (nn == nextLayer.size() - 1 && l + 1 != mLayers.size() - 1)  // pas de connexion avec le biais
+                    continue;
                 Neuron *nextNeuron = nextLayer[nn];
                 connections[nextNeuron->id()] = new Connection();
             }

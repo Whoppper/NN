@@ -8,7 +8,7 @@
 #include <QMessageBox>
 #include <QDomDocument>
 #include <QInputDialog>
-#include <QHash>
+#include <QMap>
 
 #include "net.h"
 #include "newnetdialog.h"

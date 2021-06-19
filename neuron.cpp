@@ -14,13 +14,13 @@ Neuron::Neuron(int id)
     mId = id;
 }
 
-void Neuron::setConnections(const QHash<int, Connection *> &connections)
+void Neuron::setConnections(const QMap<int, Connection *> &connections)
 {
     mConnections = connections;
     setRandomWeight();
 }
 
-QHash<int, Connection *> &Neuron::getConnections()
+QMap<int, Connection *> &Neuron::getConnections()
 {
     return mConnections;
 }

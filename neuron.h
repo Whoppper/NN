@@ -5,7 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <QVector>
-#include <QHash>
+#include <QMap>
 #include <random>
 
 enum class ActivationFunction
@@ -46,8 +46,8 @@ public:
     int id() const;
     void setId(int newId);
 
-    void setConnections(const QHash<int, Connection *> &connections);
-    QHash<int, Connection *> &getConnections();
+    void setConnections(const QMap<int, Connection *> &connections);
+    QMap<int, Connection *> &getConnections();
 
     void setRandomWeight(void);
     static double getRandomWeight(int connectionsSize);
@@ -60,7 +60,7 @@ private:
     int mId;
     double mOutputVal;
     double mInputVal;
-    QHash<int, Connection *> mConnections;
+    QMap<int, Connection *> mConnections;
     double mGradient;
     ActivationFunction mFunction;
 
