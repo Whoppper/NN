@@ -19,19 +19,18 @@ public:
     void randomizeConnectionsWeight(void);
     void setBiaisOutputVal(void);
 
+    const QVector<Layer> &layers() const;
+    void setLayers(const QVector<Layer> &newLayers);
+
 public slots:
     void reset();
-
     bool parseTrainingFile(const QString &filename);
     bool parseNetFile(const QString &filename);
-
-    //void createTopology(const QVector<int> &topology);
-    //void createConnections(const QString &filename);
-
+    void create(const QVector<int> &topology);
     void startTraining();
 
 private:
-
+    void createConnections();
     bool netIsValid();
 
 private:

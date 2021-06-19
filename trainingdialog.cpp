@@ -17,20 +17,14 @@ TrainingDialog::TrainingDialog(QWidget *parent) : QDialog(parent)
 
     mPbValidate = new QPushButton (tr("Validate"), this);
     mPbCancel = new QPushButton (tr("Cancel"), this);
-
     mPbTraining = new QPushButton(tr("Select training file"),this);
-    mPbNetFile = new QPushButton(tr("Select net file"),this);
     mLeTraining = new QLineEdit(this);
-    mLeNetFile = new QLineEdit(this);
 
     mLeTraining->setEnabled(false);
-    mLeNetFile->setEnabled(false);
     mPbValidate->setEnabled(false);
 
     hLayout->addWidget(mLeTraining);
     hLayout->addWidget(mPbTraining);
-    hLayout->addWidget(mLeNetFile);
-    hLayout->addWidget(mPbNetFile);
 
     h2Layout->addWidget(mPbValidate);
     h2Layout->addWidget(mPbCancel);
@@ -39,12 +33,11 @@ TrainingDialog::TrainingDialog(QWidget *parent) : QDialog(parent)
     QObject::connect(mPbCancel, &QPushButton::clicked, this, &QDialog::reject);
 
     QObject::connect(mPbTraining, &QPushButton::clicked, this, &TrainingDialog::selectTrainingFile);
-    QObject::connect(mPbNetFile, &QPushButton::clicked, this, &TrainingDialog::selectNetFile);
 }
 
 void TrainingDialog::enableValidButton()
 {
-    if (mLeTraining->text().trimmed() != "" && mLeNetFile->text().trimmed() != "")
+    if (mLeTraining->text().trimmed() != "")
         mPbValidate->setEnabled(true);
 }
 
@@ -57,21 +50,7 @@ void TrainingDialog::selectTrainingFile()
     enableValidButton();
 }
 
-void TrainingDialog::selectNetFile()
-{
-    QString path = QFileDialog::getOpenFileName(this, tr("Net File"), ".", tr("File (*.xml)"));
-    if (path.isEmpty())
-        return;
-    mLeNetFile->setText(path);
-    enableValidButton();
-}
-
 QString TrainingDialog::getTrainingFile()
 {
     return mLeTraining->text().trimmed();
-}
-
-QString TrainingDialog::getNetFile()
-{
-    return mLeNetFile->text().trimmed();
 }

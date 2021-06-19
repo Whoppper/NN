@@ -20,6 +20,8 @@ private slots:
     void newNet();
     void startTraining();
     void editNet();
+    void saveNet();
+    void loadNet();
 
 private:
     Net *mNet;

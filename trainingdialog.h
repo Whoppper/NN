@@ -15,23 +15,17 @@ class TrainingDialog : public QDialog
 public:
     TrainingDialog(QWidget *parent=0);
     QString getTrainingFile();
-    QString getNetFile();
-
     void enableValidButton();
 
 private:
     QPushButton *mPbTraining;
-    QPushButton *mPbNetFile;
     QLineEdit *mLeTraining;
-    QLineEdit *mLeNetFile;
-
     QPushButton *mPbValidate;
     QPushButton *mPbCancel;
 
 private slots:
 
     void selectTrainingFile();
-    void selectNetFile();
 };
 
 #endif // TRAININGDIALOG_H

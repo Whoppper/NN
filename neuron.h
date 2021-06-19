@@ -21,7 +21,6 @@ typedef  QVector<Neuron *> Layer;
 class Neuron
 {
 public:
-    Neuron(const QHash<int, Connection *> &connections);
     Neuron(int id);
     ~Neuron();
 
@@ -51,14 +50,12 @@ public:
     QHash<int, Connection *> &getConnections();
 
     void setRandomWeight(void);
+    static double getRandomWeight(int connectionsSize);
 
 private:
 
-
-
     static double sEta;   // [0.0..1.0] overall net training rate
     static double sAlpha; // [0.0..n] multiplier of last weight change (momentum)
-   // static int sNeuronId;
 
     int mId;
     double mOutputVal;

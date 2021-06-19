@@ -182,6 +182,7 @@ bool Net::parseTrainingFile(const QString &filename)
 
 bool Net::parseNetFile(const QString &filename)
 {
+    reset();
     QDomDocument xmlNet;
     // Load xml file as raw data
     QFile file(filename);
@@ -254,6 +255,16 @@ bool Net::netIsValid()
     return true;
 }
 
+const QVector<Layer> &Net::layers() const
+{
+    return mLayers;
+}
+
+void Net::setLayers(const QVector<Layer> &newLayers)
+{
+    mLayers = newLayers;
+}
+
 void Net::startTraining()
 {
     if (!netIsValid())
@@ -287,7 +298,7 @@ void Net::startTraining()
 
 void Net::randomizeConnectionsWeight(void)
 {
-    for (int l = 0 ; l < mLayers.size() - 1; l++)
+    for (int l = 0 ; l < mLayers.size() - 2; l++)
     {
         for (int n = 0 ; n < mLayers[l].size(); n++)
         {
@@ -298,70 +309,52 @@ void Net::randomizeConnectionsWeight(void)
 
 void Net::setBiaisOutputVal(void)
 {
-    for (int l = 0 ; l < mLayers.size() - 1; l++)
+    for (int l = 0 ; l < mLayers.size() - 2; l++)
     {
         mLayers[l].back()->setOutputVal(1);
     }
 }
 
-
-
-
-
-
-
-
-
-/*void Net::createConnections(const QString &filename)
+void Net::create(const QVector<int> &topology)
 {
-    bool isValid = true;
-    QFile mTrainingDataFile(filename);
-    if(QFileInfo::exists(filename))
-    {
-        isValid = false;
-    }
-    if(!mTrainingDataFile.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        isValid = false;
-    }
-    if (isValid)
-    {
-        //TODO
-        Q_ASSERT(0);
-    }
-    else
-    {
-        for (int l = 0; l < mLayers.size() - 1; l++)
-        {
-            Layer layer = mLayers[l];
-            Layer nextLayer = mLayers[l + 1];
-            for (int n = 0; n < layer.size() - 1; n++)
-            {
-                Neuron *neuron = layer[n];
-                QHash<int, Connection *> connections;
-                for (int nn = 0; nn < nextLayer.size(); nn++)
-                {
-                    Neuron *nextNeuron = nextLayer[nn];
-                    connections[nextNeuron->id()] = new Connection();
-                }
-                neuron->setConnections(connections);
-            }
-        }
-    }
-}
-
-void Net::createTopology(const QVector<int> &topology)
-{
+    int neuronId = 0;
     int numLayers = topology.size();
     for (int layerNum = 0; layerNum < numLayers; ++layerNum)
     {
         mLayers.push_back(Layer());
         for (int neuronNum = 0; neuronNum < topology[layerNum]; ++neuronNum)
         {
-            mLayers.back().push_back(new Neuron());
+            mLayers.back().push_back(new Neuron(neuronId++));
         }
-        mLayers.back().push_back(new Neuron());
+        if (layerNum == numLayers - 1)
+        {
+            // pas de biais pour l'output layer
+            continue;
+        }
+        mLayers.back().push_back(new Neuron(neuronId++));
         mLayers.back().back()->setOutputVal(1.0);
+        createConnections();
     }
 }
-*/
+
+void Net::createConnections()
+{
+    for (int l = 0; l < mLayers.size() - 2; l++)
+    {
+        Layer layer = mLayers[l];
+        Layer nextLayer = mLayers[l + 1];
+        for (int n = 0; n < layer.size() - 1; n++)
+        {
+            Neuron *neuron = layer[n];
+            QHash<int, Connection *> connections;
+            for (int nn = 0; nn < nextLayer.size(); nn++)
+            {
+                Neuron *nextNeuron = nextLayer[nn];
+                connections[nextNeuron->id()] = new Connection();
+            }
+            neuron->setConnections(connections);
+        }
+    }
+    randomizeConnectionsWeight();
+}
+

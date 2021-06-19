@@ -5,22 +5,13 @@
 
 double Neuron::sEta = 0.4;    // overall net learning rate, [0.0..1.0]
 double Neuron::sAlpha = 0.2;   // momentum, multiplier of last deltaWeight, [0.0..1.0]
-//int Neuron::sNeuronId = 0;
 
 std::random_device rd{};
 std::mt19937 gen(rd());
 
 Neuron::Neuron(int id)
 {
-    //mId = sNeuronId++;
     mId = id;
-}
-
-Neuron::Neuron(const QHash<int, Connection *> &connections)
-{
-    mConnections = connections;
-    setRandomWeight();
-    //mId = sNeuronId++;
 }
 
 void Neuron::setConnections(const QHash<int, Connection *> &connections)
@@ -71,6 +62,15 @@ void Neuron::setRandomWeight(void)
         connections[i]->setWeight(dist(gen));
         connections[i]->setMomentum(0);
     }
+}
+
+double getRandomWeight(int connectionsSize)
+{
+    if (connectionsSize == 0)
+        return 0;
+    double interval = 1.0 / sqrt(connectionsSize);
+    std::uniform_real_distribution<> dist(-interval, interval);
+    return dist(gen);
 }
 
 double Neuron::sumDOW(const Layer &nextLayer) const
