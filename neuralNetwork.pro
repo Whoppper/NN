@@ -17,7 +17,9 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
         net.cpp \
+        neuralnetview.cpp \
         neuron.cpp \
+        neuronitem.cpp \
         newnetdialog.cpp \
         trainingdialog.cpp
 
@@ -30,7 +32,9 @@ HEADERS += \
     connection.h \
     mainwindow.h \
     net.h \
+    neuralnetview.h \
     neuron.h \
+    neuronitem.h \
     newnetdialog.h \
     trainingdialog.h
 

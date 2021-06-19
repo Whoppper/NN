@@ -15,19 +15,23 @@
 #include "trainingdialog.h"
 #include "connection.h"
 
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), mNet(Q_NULLPTR)
 
 {
+    mNetView = new NeuralNetView();
+
+    connect(this, &MainWindow::netReady,mNetView, &NeuralNetView::onNetReady );
+    setCentralWidget(mNetView);
     createMenus();
+    resize(1000, 700);
     show();
 }
 
 MainWindow::~MainWindow()
 {
-    if (mNet)
-        delete mNet;
-    mNet = Q_NULLPTR;
+
 }
 
 void MainWindow::createMenus()
@@ -66,16 +70,18 @@ void MainWindow::newNet()
     if (netDialog->exec() == QDialog::Accepted)
     {
         qDebug() << netDialog->getTopology();
-        if (mNet)
-            delete mNet;
-        mNet = new Net();
+        if (!mNet.isNull())
+            mNet.clear();
+        mNet = QSharedPointer<Net>(new Net());
         mNet->create(netDialog->getTopology());
+        emit netReady(mNet);
     }
+
 }
 
 void MainWindow::startTraining()
 {
-    if (!mNet)
+    if (mNet.isNull())
     {
         qDebug() << "Load a net first";
         return ;
@@ -98,18 +104,18 @@ void MainWindow::loadNet()
     QString path = QFileDialog::getOpenFileName(this, tr("Load Net file"), ".", tr("File (*.xml)"));
     if (path.isEmpty())
         return;
-    if (mNet)
+    if (!mNet.isNull())
     {
-        delete mNet;
+        mNet.clear();
     }
-    mNet = new Net();
+    mNet = QSharedPointer<Net>(new Net());
     if (mNet->parseNetFile(path) == false)
     {
         qDebug() << "Error Load Net file";
-        delete mNet;
-        mNet = nullptr;
+        mNet.clear();
         return ;
     }
+    emit netReady(mNet);
 }
 
 void MainWindow::editNet()
@@ -120,7 +126,7 @@ void MainWindow::editNet()
 
 void MainWindow::saveNet()
 {
-    if (!mNet)
+    if (mNet.isNull())
     {
         qDebug() << "No net to save";
         return ;

@@ -147,6 +147,9 @@ bool Net::parseTrainingFile(const QString &filename)
         qDebug () << QString("Can not open the file: ") + filename;
         return false;
     }
+    mInputs.clear();
+    mOutputs.clear();
+    mTrainingIndex = 0;
     while (!mTrainingDataFile.atEnd())
     {
         QByteArray bline;

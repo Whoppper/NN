@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSharedPointer>
+#include "neuralnetview.h"
 
 class Net;
 
@@ -15,6 +17,13 @@ public:
 
     void createMenus();
 
+    Net *net() const;
+    void setNet(Net *newNet);
+
+signals:
+
+    void netReady(QSharedPointer<Net> net);
+
 private slots:
 
     void newNet();
@@ -24,7 +33,8 @@ private slots:
     void loadNet();
 
 private:
-    Net *mNet;
+    QSharedPointer<Net> mNet;
+    NeuralNetView *mNetView;
 
 };
 #endif // MAINWINDOW_H
