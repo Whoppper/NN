@@ -114,6 +114,7 @@ void MainWindow::loadNet()
         mNet.clear();
         return ;
     }
+    QObject::connect(mNet.get(), &Net::netUpdated, mNetView, &NeuralNetView::test);
     emit netReady(mNet);
 }
 

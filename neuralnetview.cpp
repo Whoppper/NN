@@ -6,16 +6,32 @@
 
 #include <QGraphicsEllipseItem>
 #include <QTimeLine>
-
+#include <QtMath>
+#include <QDebug>
+#include <QScrollBar>
+#include <QThread>
 
 NeuralNetView::NeuralNetView(QWidget *parent) : QGraphicsView(parent)
 {
-    mScene = new QGraphicsScene(-100, -100, 600, 600, this);
+    mScene = new QGraphicsScene(0, 0, 1000, 500, this);
     setRenderHint(QPainter::Antialiasing);
-    setTransformationAnchor(QGraphicsView::NoAnchor);
+    QGraphicsLineItem *linex = new QGraphicsLineItem();
+    linex->setLine(-100, 0, 100 , 0);
+    QGraphicsLineItem *liney = new QGraphicsLineItem();
+    liney->setLine(0, -100, 0 , 100);
+    mScene->addItem(linex);
+    mScene->addItem(liney);
+    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setScene(mScene);
     setWindowTitle(QT_TRANSLATE_NOOP(QGraphicsView, "Net"));
     mRightMousePressed = false;
+    viewport()->installEventFilter(this);
+    _zoom_factor_base = 1.0005;
+}
+
+QGraphicsScene *NeuralNetView::scene() const
+{
+    return mScene;
 }
 
 
@@ -36,60 +52,105 @@ void NeuralNetView::onNetReady(QSharedPointer<Net> net)
             mScene->addItem(item);
         }
     }
-    setSceneRect(-100, -100, net->layers().size() * LAYER_SPACER, maxNeuronInLayer * NEURON_SPACER);
+    setSceneRect(-1000, -1000, net->layers().size() * LAYER_SPACER + 2000, maxNeuronInLayer * NEURON_SPACER + 2000);
 }
 
-void NeuralNetView::wheelEvent(QWheelEvent *event)
+void NeuralNetView::gentle_zoom(double factor)
 {
-    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-    double scaleFactor = 1.15;
-    if(event->angleDelta().y() > 0)
-    {
-        scale(scaleFactor, scaleFactor);
-    }
-    else
-    {
-         scale(1.0 / scaleFactor, 1.0 / scaleFactor);
-    }
-    setTransformationAnchor(QGraphicsView::NoAnchor);
+
+    scale(factor, factor);
+    centerOn(target_scene_pos);
+    QPointF delta_viewport_pos = target_viewport_pos - QPointF(viewport()->width() / 2.0,
+                                                             viewport()->height() / 2.0);
+    QPointF viewport_center = mapFromScene(target_scene_pos) - delta_viewport_pos;
+    centerOn(mapToScene(viewport_center.toPoint()));
 }
 
-void NeuralNetView::mousePressEvent(QMouseEvent *event)
+bool NeuralNetView::eventFilter(QObject *object, QEvent *event)
 {
-    if (event->button() == Qt::RightButton)
+    if (event->type() == QEvent::MouseMove)
     {
-        mRightMousePressed = true;
-        mOriginX = event->x();
-        mOriginY = event->y();
-        event->accept();
-        return;
+        QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
+        /*qDebug() << "mouse pos in viewport: " << mouse_event->pos();
+        qDebug() << "viewport: " << mapToScene(viewport()->pos()) <<" " <<  viewport()->width() << "  " << viewport()->height();
+        qDebug() << "mouse pos in scene: " << mapToScene(mouse_event->pos());
+        qDebug() << "\n";*/
+
+        QPointF delta = target_viewport_pos - mouse_event->pos();
+        if (qAbs(delta.x()) > 5 || qAbs(delta.y()) > 5)
+        {
+            target_viewport_pos = mouse_event->pos();
+            target_scene_pos = mapToScene(mouse_event->pos());
+        }
+        if (mRightMousePressed)
+        {
+            QPointF oldp = mapToScene(mOriginX, mOriginY);
+            QPointF newP = mapToScene(mouse_event->pos());
+            QPointF translation = newP - oldp;
+            translate(translation.x(), translation.y());
+        }
+        mOriginX = (mouse_event->pos()).x();
+        mOriginY = (mouse_event->pos()).y();
+        return false;
     }
+    else if (event->type() == QEvent::Wheel)
+    {
+        QWheelEvent* wheel_event = static_cast<QWheelEvent*>(event);
+        double angle = wheel_event->angleDelta().y();
+        double factor = qPow(_zoom_factor_base, angle);
+        gentle_zoom(factor);
+        return false;
+    }
+    else if (event->type() == QEvent::MouseButtonPress)
+    {
+        QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
+        if (mouse_event->button() == Qt::RightButton)
+        {
+            mRightMousePressed = true;
+            mOriginX = (mouse_event->pos()).x();
+            mOriginY = (mouse_event->pos()).y();
+            return false;
+        }
+    }
+    else if (event->type() == QEvent::MouseButtonRelease)
+    {
+        QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
+        if (mouse_event->button() == Qt::RightButton)
+        {
+            mRightMousePressed = false;
+            mOriginX = (mouse_event->pos()).x();
+            mOriginY = (mouse_event->pos()).y();
+        }
+        return false;
+    }
+    Q_UNUSED(object);
+    return false;
 }
 
-void NeuralNetView::mouseReleaseEvent(QMouseEvent *event)
+void NeuralNetView::test()
 {
-    if (event->button() == Qt::RightButton)
-    {
-        mRightMousePressed = false;
-        event->accept();
-        return;
-    }
-    event->ignore();
-}
+   //qDebug() << " alloo";
+   //mScene->update(-1000, -1000, mNet.toStrongRef()->layers().size() * LAYER_SPACER + 2000, 10 * NEURON_SPACER + 2000);
+   /*mScene->update();
+   Net *net = mNet.toStrongRef().get();*/
+   /*int maxNeuronInLayer = 0;
+   for (int l = 0; l < net->layers().size(); l++)
+   {
+       Layer layer = net->layers()[l];
+       maxNeuronInLayer = std::max(maxNeuronInLayer, layer.size());
+       for (int n = 0; n < layer.size(); n++)
+       {
 
-void NeuralNetView::mouseMoveEvent(QMouseEvent *event)
-{
-    if (mRightMousePressed)
-    {
-        QPointF oldp = mapToScene(mOriginX, mOriginY);
-        QPointF newP = mapToScene(event->pos());
-        QPointF translation = newP - oldp;
-        translate(translation.x(), translation.y());
-        mOriginX = event->x();
-        mOriginY = event->y();
-        event->accept();
-        return;
-    }
-    event->ignore();
+       }
+   }*/
+   /*QList<QGraphicsItem *>	items = mScene->items();
+   int i = 0;
+   while (i < items.size())
+   {
+       items[i]->update();
+       i++;
+   }*/
 
+   viewport()->repaint();
+   QThread::msleep(200);
 }

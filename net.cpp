@@ -131,6 +131,7 @@ void Net::feedForward(const QVector<double> &inputVals)
             }
             mLayers[layerNum][n]->feedForward(prevLayer);
         }
+        emit netUpdated();
     }
 }
 

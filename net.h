@@ -29,6 +29,9 @@ public slots:
     void create(const QVector<int> &topology);
     void startTraining();
 
+signals:
+    void netUpdated();
+
 private:
     void createConnections();
     bool netIsValid();

@@ -1,6 +1,8 @@
 #include "neuronitem.h"
 #include "neuron.h"
 
+#include <QDebug>
+
 
 NeuronItem::NeuronItem(int layerIndex, int neuronIndex, Neuron *neuron):
 mLayerIndex(layerIndex),
@@ -12,7 +14,14 @@ mNeuron(neuron)
 
 void NeuronItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
+    //qDebug() << "Paint called";
     QColor color(255, 128, 50);
+    if (mNeuron->outputVal() >= 0 && mNeuron->outputVal() < 1)
+    {
+        color = QColor(mNeuron->outputVal() * 250, mNeuron->outputVal() * 250, mNeuron->outputVal() * 250);
+    }
+    else
+        color = QColor(0,0,0);
     painter->setBrush(color);
     painter->drawEllipse(x(), y(), NEURON_WIDTH, NEURON_HEIGHT);
 }

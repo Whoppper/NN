@@ -16,6 +16,8 @@ class NeuralNetView : public QGraphicsView
 public:
     NeuralNetView(QWidget *parent = nullptr);
 
+    QGraphicsScene *scene() const;
+
 private:
 
     QGraphicsScene *mScene;
@@ -24,12 +26,23 @@ private:
     int mOriginX;
     int mOriginY;
 
+    QPointF target_scene_pos, target_viewport_pos;
+
+    void gentle_zoom(double factor);
+    double _zoom_factor_base;
+    bool eventFilter(QObject* object, QEvent* event);
+
 public slots:
-    void wheelEvent(QWheelEvent *e);
+
     void onNetReady(QSharedPointer<Net> net);
-    void mousePressEvent(QMouseEvent *event);
+    /*void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
+    void wheelEvent(QWheelEvent *e);*/
+
+    void test();
+
+
 };
 
 #endif // NEURALNETVIEW_H

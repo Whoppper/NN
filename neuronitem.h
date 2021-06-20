@@ -6,10 +6,10 @@
 #include <QGraphicsItem>
 #include <QPainter>
 
-constexpr int NEURON_WIDTH = 50;
-constexpr int NEURON_HEIGHT = 50;
-constexpr int LAYER_SPACER = 150;
-constexpr int NEURON_SPACER = 100;
+constexpr int NEURON_WIDTH = 20;
+constexpr int NEURON_HEIGHT = 20;
+constexpr int LAYER_SPACER = NEURON_WIDTH * 1.5;
+constexpr int NEURON_SPACER = NEURON_HEIGHT ;
 
 class Neuron;
 
