@@ -21,11 +21,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 {
     mNetView = new NeuralNetView();
-
     connect(this, &MainWindow::netReady,mNetView, &NeuralNetView::onNetReady );
     setCentralWidget(mNetView);
     createMenus();
-    resize(1000, 700);
+    //resize(1000, 700);
     show();
 }
 
