@@ -21,6 +21,7 @@ public:
 
     const QVector<Layer> &layers() const;
     void setLayers(const QVector<Layer> &newLayers);
+    void clearOutput(void);
 
 public slots:
     void reset();

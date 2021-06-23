@@ -119,7 +119,7 @@ void Net::feedForward(const QVector<double> &inputVals)
     {
         mLayers[0][i]->setOutputVal(inputVals[i]);
     }
-
+    emit netUpdated();
     for (int layerNum = 1; layerNum < mLayers.size(); ++layerNum)
     {
         Layer &prevLayer = mLayers[layerNum - 1];
@@ -295,6 +295,7 @@ void Net::startTraining()
 
         qDebug()  << "Net recent average error: " << getRecentAverageError() << "\n";
         ++mTrainingIndex;
+        clearOutput();
     }
 
     qDebug() << "Done";
@@ -309,6 +310,18 @@ void Net::randomizeConnectionsWeight(void)
             mLayers[l][n]->setRandomWeight();
         }
     }
+}
+
+void Net::clearOutput(void)
+{
+    for (int l = 0 ; l < mLayers.size(); l++)
+    {
+        for (int n = 0 ; n < mLayers[l].size() - 1; n++)
+        {
+            mLayers[l][n]->setOutputVal(0);
+        }
+    }
+    mLayers[mLayers.size() -1][mLayers[mLayers.size() -1].size() - 1]->setOutputVal(0);
 }
 
 void Net::setBiaisOutputVal(void)
