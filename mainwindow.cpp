@@ -82,7 +82,7 @@ void MainWindow::startTraining()
 {
     if (mNet.isNull())
     {
-        qDebug() << "Load a net first";
+        qDebug() << "Load a net m'kay";
         return ;
     }
     TrainingDialog *trainingDialog = new TrainingDialog(this);

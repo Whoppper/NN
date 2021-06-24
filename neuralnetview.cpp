@@ -33,6 +33,8 @@ void NeuralNetView::onNetReady(QSharedPointer<Net> net)
 {
     if (net.isNull())
         return;
+    mScene->clear();
+    viewport()->update();
     mNet = net.toWeakRef();
     int maxNeuronInLayer = 0;
     for (int l = 0; l < net->layers().size(); l++)
@@ -81,7 +83,6 @@ bool NeuralNetView::eventFilter(QObject *object, QEvent *event)
         }
         mOriginX = (mouse_event->pos()).x();
         mOriginY = (mouse_event->pos()).y();
-        QPointF aaa = mapToScene(mouse_event->pos());
         return false;
     }
     else if (event->type() == QEvent::Wheel)
@@ -121,5 +122,5 @@ bool NeuralNetView::eventFilter(QObject *object, QEvent *event)
 void NeuralNetView::test()
 {
    viewport()->repaint();
-   QThread::msleep(500);
+   //QThread::msleep(500);
 }

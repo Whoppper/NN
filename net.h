@@ -45,6 +45,8 @@ private:
     QVector<QVector<double>> mInputs;
     QVector<QVector<double>> mOutputs;
 
+    bool test;
+
     int mTrainingIndex;
 };
 

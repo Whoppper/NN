@@ -14,6 +14,7 @@ CONFIG -= app_bundle
 
 SOURCES += \
         connection.cpp \
+        connectionitem.cpp \
         main.cpp \
         mainwindow.cpp \
         net.cpp \
@@ -30,6 +31,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     connection.h \
+    connectionitem.h \
     mainwindow.h \
     net.h \
     neuralnetview.h \

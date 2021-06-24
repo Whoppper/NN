@@ -33,9 +33,9 @@ void NeuronItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
     const QRect gradientRectangle = QRect(NEURON_WIDTH / 2, 10, NEURON_WIDTH, NEURON_HEIGHT);
     painter->setBrush(color);
     painter->drawEllipse(0,0, NEURON_WIDTH, NEURON_HEIGHT);
-    painter->drawText(inputRectangle, QString::number(mNeuron->inputVal()));
+    /*painter->drawText(inputRectangle, QString::number(mNeuron->inputVal()));
     painter->drawText(outputRectangle, QString::number(mNeuron->outputVal()));
-    painter->drawText(gradientRectangle, QString::number(mNeuron->gradient()));
+    painter->drawText(gradientRectangle, QString::number(mNeuron->gradient()));*/
     int n = 0;
     /*for (Connection *connection :mNeuron->getConnections())
     {

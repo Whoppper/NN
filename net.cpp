@@ -4,7 +4,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QDomDocument>
-
+#include <QCoreApplication>
 #include "connection.h"
 
 namespace
@@ -56,6 +56,7 @@ void Net::reset()
     mRecentAverageError = 0.0;
     mInputs.clear();
     mOutputs.clear();
+    test = true;
 }
 
 
@@ -119,7 +120,7 @@ void Net::feedForward(const QVector<double> &inputVals)
     {
         mLayers[0][i]->setOutputVal(inputVals[i]);
     }
-    emit netUpdated();
+
     for (int layerNum = 1; layerNum < mLayers.size(); ++layerNum)
     {
         Layer &prevLayer = mLayers[layerNum - 1];
@@ -131,7 +132,7 @@ void Net::feedForward(const QVector<double> &inputVals)
             }
             mLayers[layerNum][n]->feedForward(prevLayer);
         }
-        emit netUpdated();
+
     }
 }
 
@@ -277,6 +278,7 @@ void Net::startTraining()
         reset();
         return ;
     }
+    test = false;
     while (mTrainingIndex < mInputs.size())
     {
         qDebug()  << "Index " << mTrainingIndex;
@@ -284,7 +286,10 @@ void Net::startTraining()
 
         showVectorVals("Inputs:", mInputs[mTrainingIndex]);
         feedForward(mInputs[mTrainingIndex]);
-
+        emit(netUpdated());
+        QCoreApplication::processEvents();
+        if (test == true)
+            return ;
         getResults(resultVals);
         showVectorVals("Net output: ", resultVals);
 
@@ -292,7 +297,9 @@ void Net::startTraining()
         assert(mOutputs[mTrainingIndex].size() == mLayers.back().size());
 
         backProp(mOutputs[mTrainingIndex]);
-
+        QCoreApplication::processEvents();
+        if (test == true)
+            return ;
         qDebug()  << "Net recent average error: " << getRecentAverageError() << "\n";
         ++mTrainingIndex;
         clearOutput();
